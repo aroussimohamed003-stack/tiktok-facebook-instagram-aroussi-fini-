@@ -1,0 +1,22 @@
+{
+  "name": "Mohamed Aroussi",
+  "short_name": "M.Aroussi",
+  "description": "منصة لمشاركة الفيديوهات والقصص",
+  "start_url": "/ba/indexmo.php",
+  "display": "standalone",
+  "background_color": "#673DE6",
+  "theme_color": "#673DE6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "images/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
