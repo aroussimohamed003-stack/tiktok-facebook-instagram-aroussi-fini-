@@ -39,10 +39,10 @@ if (isset($_POST['login'])) {
             header("Location: indexmo.php");
             exit();
         } else {
-            $login_error = "كلمة المرور غير صحيحة";
+            $login_error = "Incorrect password";
         }
     } else {
-        $login_error = "اسم المستخدم غير موجود";
+        $login_error = "Username not found";
     }
     $stmt->close();
 }
@@ -56,19 +56,19 @@ if (isset($_POST['register'])) {
     $errors = [];
     
     if (empty($username)) {
-        $errors[] = "اسم المستخدم مطلوب";
+        $errors[] = "Username is required";
     } elseif (strlen($username) < 4) {
-        $errors[] = "اسم المستخدم يجب أن يكون على الأقل 4 أحرف";
+        $errors[] = "Username must be at least 4 characters long";
     }
     
     if (empty($password)) {
-        $errors[] = "كلمة المرور مطلوبة";
+        $errors[] = "Password is required";
     } elseif (strlen($password) < 8) {
-        $errors[] = "كلمة المرور يجب أن تكون على الأقل 8 أحرف";
+        $errors[] = "Password must be at least 8 characters long";
     }
     
     if ($password !== $confirm_password) {
-        $errors[] = "كلمة المرور غير متطابقة";
+        $errors[] = "Passwords do not match";
     }
     
     if (empty($errors)) {
@@ -78,17 +78,17 @@ if (isset($_POST['register'])) {
         $stmt->store_result();
         
         if ($stmt->num_rows > 0) {
-            $errors[] = "اسم المستخدم موجود مسبقاً";
+            $errors[] = "Username already exists";
         } else {
             $stmt = $con->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
             $stmt->bind_param("ss", $username, $password);
             
             if ($stmt->execute()) {
-                $_SESSION['success_msg'] = "تم التسجيل بنجاح! يمكنك تسجيل الدخول الآن";
+                $_SESSION['success_msg'] = "Registration successful! You can now log in";
                 header("Location: ".$_SERVER['PHP_SELF']);
                 exit();
             } else {
-                $errors[] = "حدث خطأ أثناء التسجيل. يرجى المحاولة لاحقاً.";
+                $errors[] = "An error occurred during registration. Please try again later.";
             }
         }
         $stmt->close();
@@ -96,12 +96,12 @@ if (isset($_POST['register'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل الدخول والتسجيل</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Login & Registration System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
@@ -109,7 +109,7 @@ if (isset($_POST['register'])) {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        font-family: 'Tajawal', sans-serif;
+        font-family: 'Outfit', sans-serif;
     }
     
     body {
@@ -204,7 +204,7 @@ if (isset($_POST['register'])) {
     .input-group label {
         position: absolute;
         top: 12px;
-        right: 18px;
+        left: 18px;
         color: #777;
         transition: all 0.3s ease;
         pointer-events: none;
@@ -214,7 +214,7 @@ if (isset($_POST['register'])) {
     .input-group input:focus + label,
     .input-group input:valid + label {
         top: -8px;
-        right: 12px;
+        left: 12px;
         font-size: 11px;
         background: white;
         padding: 0 8px;
@@ -281,7 +281,7 @@ if (isset($_POST['register'])) {
     
     .toggle-password {
         position: absolute;
-        left: 15px;
+        right: 15px;
         top: 50%;
         transform: translateY(-50%);
         cursor: pointer;
@@ -342,7 +342,7 @@ if (isset($_POST['register'])) {
     .close {
         position: absolute;
         top: 15px;
-        right: 15px;
+        left: 15px;
         color: #fff;
         font-size: 30px;
         font-weight: bold;
@@ -402,7 +402,7 @@ if (isset($_POST['register'])) {
         .input-group label {
             font-size: 14px;
             top: 10px;
-            right: 15px;
+            left: 15px;
         }
         
         .btn {
@@ -446,7 +446,7 @@ if (isset($_POST['register'])) {
         
         .toggle-password {
             font-size: 12px;
-            left: 12px;
+            right: 12px;
         }
     }
 </style>
@@ -458,9 +458,9 @@ if (isset($_POST['register'])) {
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">مرحباً</h5>
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Welcome</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body">
@@ -474,6 +474,7 @@ if (isset($_POST['register'])) {
             </a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="register.php">حول التطبيق</a></li>
+              <li><a class="dropdown-item" href="register.php">About the App</a></li>
               <li>
                 <hr class="dropdown-divider">
               </li>
@@ -482,7 +483,7 @@ if (isset($_POST['register'])) {
             
                       <li class="nav-item">
                 <a href="Aroussi.apk" download>
-        <img src="Play_Store.png" alt="تحميل التطبيق" style="width: 200px; cursor: pointer;">
+        <img src="Play_Store.png" alt="Download App" style="width: 200px; cursor: pointer;">
     </a>
           </li>
           </li>
@@ -509,9 +510,9 @@ if (isset($_POST['register'])) {
         <?php endif; ?>
         
         <div class="form-container">
-            <!-- تسجيل الدخول -->
+            <!-- Login -->
             <div class="form-section">
-                <h2>تسجيل الدخول</h2>
+                <h2>Login</h2>
                 <?php if (isset($login_error)): ?>
                     <div class="alert alert-danger"><?php echo $login_error; ?></div>
                 <?php endif; ?>
@@ -519,25 +520,25 @@ if (isset($_POST['register'])) {
                 <form method="POST" action="">
                     <div class="input-group">
                         <input type="text" name="username" id="username" required>
-                        <label for="username">اسم المستخدم</label>
+                        <label for="username">Username</label>
                     </div>
                     
                     <div class="input-group">
                         <input type="password" name="password" id="password" required>
-                        <label for="password">كلمة المرور</label>
+                        <label for="password">Password</label>
                         <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                     </div>
                     
-                    <button type="submit" name="login" class="btn">دخول</button>
-                    <button type="button" class="btn btn-video" id="videoBtn">مشاهدة فيديو تعريفي</button>
+                    <button type="submit" name="login" class="btn">Login</button>
+                    <button type="button" class="btn btn-video" id="videoBtn">Watch Intro Video</button>
                 </form>
             </div>
             
             <div class="divider"></div>
             
-            <!-- التسجيل -->
+            <!-- Register -->
             <div class="form-section">
-                <h2>إنشاء حساب جديد</h2>
+                <h2>Create Account</h2>
                 <?php if (!empty($errors)): ?>
                     <div class="alert alert-danger">
                         <?php foreach ($errors as $error): ?>
@@ -549,36 +550,33 @@ if (isset($_POST['register'])) {
                 <form method="POST" action="">
                     <div class="input-group">
                         <input type="text" name="reg_username" id="reg_username" required>
-                        <label for="reg_username">اسم المستخدم</label>
+                        <label for="reg_username">Username</label>
                     </div>
                     
                     <div class="input-group">
                         <input type="password" name="reg_password" id="reg_password" required>
-                        <label for="reg_password">كلمة المرور</label>
+                        <label for="reg_password">Password</label>
                         <i class="fas fa-eye toggle-password" id="toggleRegPassword"></i>
                     </div>
                     
                     <div class="input-group">
                         <input type="password" name="confirm_password" id="confirm_password" required>
-                        <label for="confirm_password">تأكيد كلمة المرور</label>
+                        <label for="confirm_password">Confirm Password</label>
                         <i class="fas fa-eye toggle-password" id="toggleConfirmPassword"></i>
                     </div>
                     
-                    <button type="submit" name="register" class="btn btn-register">تسجيل</button>
+                    <button type="submit" name="register" class="btn btn-register">Register</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Local Video Modal -->
+    <!-- YouTube Video Modal -->
     <div id="videoModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <div class="video-container">
-                <video id="localVideo" controls>
-                    <source src="vid/fini clip sitte tiktok instagram.mp4" type="video/mp4">
-                    المتصفح لا يدعم تشغيل الفيديو.
-                </video>
+                <iframe id="youtubeVideo" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position: absolute; top: 0; left: 0;"></iframe>
             </div>
         </div>
     </div>
@@ -612,26 +610,26 @@ if (isset($_POST['register'])) {
             bubble.style.height = bubble.style.width;
         });
 
-        // Local Video Modal
+        // YouTube Video Modal
         const modal = document.getElementById('videoModal');
         const videoBtn = document.getElementById('videoBtn');
         const closeBtn = document.getElementsByClassName('close')[0];
-        const localVideo = document.getElementById('localVideo');
+        const youtubeVideo = document.getElementById('youtubeVideo');
+        const videoSrc = "https://www.youtube.com/embed/q3vjHreO4ws?autoplay=1";
 
         videoBtn.addEventListener('click', function() {
-            localVideo.currentTime = 0; // Start from beginning
-            localVideo.play(); // Play the video
+            youtubeVideo.src = videoSrc;
             modal.style.display = "block";
         });
 
         closeBtn.addEventListener('click', function() {
-            localVideo.pause(); // Pause the video
+            youtubeVideo.src = ""; // Stop video by clearing src
             modal.style.display = "none";
         });
 
         window.addEventListener('click', function(event) {
             if (event.target == modal) {
-                localVideo.pause(); // Pause when clicking outside
+                youtubeVideo.src = ""; // Stop video
                 modal.style.display = "none";
             }
         });
