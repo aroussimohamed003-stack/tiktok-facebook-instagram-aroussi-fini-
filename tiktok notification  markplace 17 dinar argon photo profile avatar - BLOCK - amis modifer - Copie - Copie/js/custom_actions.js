@@ -613,7 +613,7 @@ function loadStoryViewers(storyId) {
             if (data.viewers && data.viewers.length > 0) {
                 data.viewers.forEach(v => {
                     h += `<li>
-                            <img src="${v.profile_picture || 'uploads/profile.jpg'}" class="viewer-img">
+                            <img src="${v.profile_picture || 'uploads/profile.jpg'}" class="viewer-img" onerror="this.src='uploads/profile.jpg'">
                             <span>${v.username}</span>
                           </li>`;
                 });
@@ -646,7 +646,7 @@ function loadStoryComments(storyId) {
                 data.comments.forEach(c => {
                     const del = (data.current_user_id == c.user_id) ? `<i class="fas fa-trash story-comment-delete" onclick="deleteStoryComment(${c.id})"></i>` : '';
                     h += `<div class="story-comment-item">
-                            <img src="${c.profile_picture || 'uploads/profile.jpg'}" class="story-comment-avatar">
+                            <img src="${c.profile_picture || 'uploads/profile.jpg'}" class="story-comment-avatar" onerror="this.src='uploads/profile.jpg'">
                             <div class="story-comment-content">
                                 <div class="story-comment-user">${c.username}</div>
                                 <div class="story-comment-text">${c.comment} ${del}</div>
