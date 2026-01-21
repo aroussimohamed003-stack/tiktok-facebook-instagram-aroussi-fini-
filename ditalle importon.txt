@@ -1,0 +1,5 @@
+fix_admin_friends.php ouvrir 
+
+
+photo porofile 
+uploads/profile.jpg
