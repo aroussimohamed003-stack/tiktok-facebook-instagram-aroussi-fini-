@@ -10,7 +10,6 @@ $admin_pass = "aroussi123";
 if (isset($_POST['login_admin'])) {
     $email = $_POST['email'];
     $pass = $_POST['password'];
-
     if ($email === $admin_email && $pass === $admin_pass) {
         $_SESSION['is_admin'] = true;
         header("Location: admin-cpanl.php");
@@ -31,152 +30,84 @@ if (isset($_GET['logout'])) {
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html class="dark" lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل دخول المسؤول</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #f0f2f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .login-card {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .login-gradient { background: linear-gradient(135deg, #0b0e14 0%, #161b26 100%); }
     </style>
 </head>
-<body>
-    <div class="login-card">
-        <h3 class="text-center mb-4">لوحة التحكم</h3>
+<body class="login-gradient min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#161b26] border border-white/5 rounded-2xl p-8 shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-white text-2xl font-bold">لوحة التحكم</h1>
+            <p class="text-slate-400 mt-2">يرجى تسجيل الدخول للمتابعة</p>
+        </div>
         <?php if(isset($error)): ?>
-            <div class="alert alert-danger text-center"><?php echo $error; ?></div>
+            <div class="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-center mb-6"><?php echo $error; ?></div>
         <?php endif; ?>
-        <form method="POST">
-            <div class="mb-3">
-                <label class="form-label">البريد الإلكتروني</label>
-                <input type="email" name="email" class="form-control" required>
+        <form method="POST" class="space-y-6">
+            <div>
+                <label class="block text-slate-300 text-sm font-medium mb-2">البريد الإلكتروني</label>
+                <input type="email" name="email" class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-primary outline-none transition-all" required>
             </div>
-            <div class="mb-3">
-                <label class="form-label">كلمة المرور</label>
-                <input type="password" name="password" class="form-control" required>
+            <div>
+                <label class="block text-slate-300 text-sm font-medium mb-2">كلمة المرور</label>
+                <input type="password" name="password" class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-primary outline-none transition-all" required>
             </div>
-            <button type="submit" name="login_admin" class="btn btn-primary w-100">دخول</button>
+            <button type="submit" name="login_admin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20">دخول</button>
         </form>
     </div>
 </body>
 </html>
-<?php
-    exit(); // Stop execution here if not logged in
-}
+<?php exit(); }
 
-// --- ADMIN PANEL CONTENT (Only accessible if logged in) ---
-
-// 1. Ensure 'email' column exists in users table
+// --- ADMIN PANEL LOGIC ---
+// Ensure email exists
 $check_email = mysqli_query($con, "SHOW COLUMNS FROM users LIKE 'email'");
-if (mysqli_num_rows($check_email) == 0) {
-    mysqli_query($con, "ALTER TABLE users ADD email VARCHAR(255) NULL");
-}
+if (mysqli_num_rows($check_email) == 0) { mysqli_query($con, "ALTER TABLE users ADD email VARCHAR(255) NULL"); }
 
-// 2. Handle User Actions (Delete / Edit)
+// Handle Actions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // Delete User
     if (isset($_POST['delete_user_id'])) {
-        $user_id = intval($_POST['delete_user_id']);
-        // Delete related data first (optional but recommended)
-        mysqli_query($con, "DELETE FROM video_views WHERE user_id = $user_id");
-        mysqli_query($con, "DELETE FROM story_views WHERE user_id = $user_id");
-        mysqli_query($con, "DELETE FROM stories WHERE user_id = $user_id");
-        mysqli_query($con, "DELETE FROM videos WHERE user_id = $user_id");
-        // Delete user
-        mysqli_query($con, "DELETE FROM users WHERE id = $user_id");
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit();
+        $uid = intval($_POST['delete_user_id']);
+        mysqli_query($con, "DELETE FROM video_views WHERE user_id = $uid");
+        mysqli_query($con, "DELETE FROM story_views WHERE user_id = $uid");
+        mysqli_query($con, "DELETE FROM stories WHERE user_id = $uid");
+        mysqli_query($con, "DELETE FROM videos WHERE user_id = $uid");
+        mysqli_query($con, "DELETE FROM users WHERE id = $uid");
+        header("Location: admin-cpanl.php"); exit();
     }
-
-    // Edit User
     if (isset($_POST['edit_user_id'])) {
-        $user_id = intval($_POST['edit_user_id']);
-        $username = mysqli_real_escape_string($con, $_POST['username']);
-        $email = mysqli_real_escape_string($con, $_POST['email']);
-        $password = mysqli_real_escape_string($con, $_POST['password']); // Store as plain text for now as requested
-        
-        $sql = "UPDATE users SET username='$username', email='$email', password='$password' WHERE id=$user_id";
-        mysqli_query($con, $sql);
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit();
+        $uid = intval($_POST['edit_user_id']);
+        $u = mysqli_real_escape_string($con, $_POST['username']);
+        $e = mysqli_real_escape_string($con, $_POST['email']);
+        $p = mysqli_real_escape_string($con, $_POST['password']);
+        mysqli_query($con, "UPDATE users SET username='$u', email='$e', password='$p' WHERE id=$uid");
+        header("Location: admin-cpanl.php"); exit();
     }
-
-    // Delete Video
     if (isset($_POST['delete_video_id'])) {
-        $video_id = intval($_POST['delete_video_id']);
-        mysqli_query($con, "DELETE FROM video_views WHERE video_id = $video_id");
-        mysqli_query($con, "DELETE FROM videos WHERE id = $video_id");
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit();
+        $vid = intval($_POST['delete_video_id']);
+        mysqli_query($con, "DELETE FROM videos WHERE id = $vid");
+        header("Location: admin-cpanl.php"); exit();
     }
-
-    // Restore Video
     if (isset($_POST['restore_video_id'])) {
-        $video_id = intval($_POST['restore_video_id']);
-        mysqli_query($con, "UPDATE videos SET status = 'active' WHERE id = $video_id");
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit();
+        $vid = intval($_POST['restore_video_id']);
+        mysqli_query($con, "UPDATE videos SET status = 'active' WHERE id = $vid");
+        header("Location: admin-cpanl.php"); exit();
     }
 }
 
-// 4. Handle Friend Actions (AJAX)
-if (isset($_POST['ajax_friend_action'])) {
-    header('Content-Type: application/json');
-    $action = $_POST['action'];
-    $uid = intval($_POST['user_id']); // The user we are managing
-
-    if ($action == 'remove') {
-        $fid = intval($_POST['friend_id']);
-         mysqli_query($con, "DELETE FROM friends WHERE (sender_id = $uid AND receiver_id = $fid) OR (sender_id = $fid AND receiver_id = $uid)");
-         echo json_encode(['success' => true]);
-    }
-    elseif ($action == 'add') {
-        $fid = 0;
-        if (isset($_POST['friend_id']) && !empty($_POST['friend_id'])) {
-            $fid = intval($_POST['friend_id']);
-        } elseif (isset($_POST['friend_username'])) {
-            $username = mysqli_real_escape_string($con, $_POST['friend_username']);
-            $u_res = mysqli_query($con, "SELECT id FROM users WHERE username = '$username'");
-            if (mysqli_num_rows($u_res) > 0) {
-                $fid = mysqli_fetch_assoc($u_res)['id'];
-            }
-        }
-        
-        if ($fid > 0) {
-            if ($fid == $uid) {
-                echo json_encode(['success' => false, 'error' => 'لا يمكنك إضافة المستخدم لنفسه']);
-            } else {
-                // Check exist
-                $chk = mysqli_query($con, "SELECT * FROM friends WHERE (sender_id = $uid AND receiver_id = $fid) OR (sender_id = $fid AND receiver_id = $uid)");
-                if (mysqli_num_rows($chk) == 0) {
-                     mysqli_query($con, "INSERT INTO friends (sender_id, receiver_id, status) VALUES ($uid, $fid, 'accepted')");
-                     echo json_encode(['success' => true]);
-                } else {
-                     echo json_encode(['success' => false, 'error' => 'هم أصدقاء بالفعل أو يوجد طلب معلق']);
-                }
-            }
-        } else {
-            echo json_encode(['success' => false, 'error' => 'المستخدم غير موجود']);
-        }
-    }
-    exit();
-}
+// Fetch Stats
+$total_users = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM users"))['c'];
+$reported_count = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM videos WHERE status = 'signale'"))['c'];
+$total_videos = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM videos"))['c'];
+$total_stories = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM stories"))['c'];
 
 // 3. Handle AJAX Data Fetching for User Details
 if (isset($_GET['fetch_details']) && isset($_GET['user_id'])) {
@@ -191,505 +122,382 @@ if (isset($_GET['fetch_details']) && isset($_GET['user_id'])) {
     $f_cnt = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM friends WHERE (sender_id = $uid OR receiver_id = $uid) AND status = 'accepted'"))['c'];
     
     ?>
-    <div class="row g-3">
+    <div class="space-y-6">
         <!-- Stats Widgets -->
-        <div class="col-6 col-md-3">
-            <div class="card bg-light border-0 text-center p-3">
-                <h5><i class="fas fa-video text-primary"></i> الفيديوهات</h5>
-                <h3 class="mb-0"><?= $v_cnt ?></h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                <p class="text-slate-400 text-xs mb-1">الفيديوهات</p>
+                <h4 class="text-xl font-bold text-primary"><?= $v_cnt ?></h4>
+            </div>
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                <p class="text-slate-400 text-xs mb-1">القصص</p>
+                <h4 class="text-xl font-bold text-secondary"><?= $s_cnt ?></h4>
+            </div>
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                <p class="text-slate-400 text-xs mb-1">المنشورات</p>
+                <h4 class="text-xl font-bold text-green-500"><?= $p_cnt ?></h4>
+            </div>
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                <p class="text-slate-400 text-xs mb-1">الأصدقاء</p>
+                <h4 class="text-xl font-bold text-orange-500"><?= $f_cnt ?></h4>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card bg-light border-0 text-center p-3">
-                <h5><i class="fas fa-camera text-info"></i> القصص</h5>
-                <h3 class="mb-0"><?= $s_cnt ?></h3>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card bg-light border-0 text-center p-3">
-                <h5><i class="fas fa-file-alt text-success"></i> المنشورات</h5>
-                <h3 class="mb-0"><?= $p_cnt ?></h3>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card bg-light border-0 text-center p-3">
-                <h5><i class="fas fa-user-friends text-warning"></i> الأصدقاء</h5>
-                <h3 class="mb-0"><?= $f_cnt ?></h3>
-            </div>
-        </div>
-    </div>
 
-    <ul class="nav nav-tabs mt-4" id="userTabs" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-videos">فيديوهات</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-posts">منشورات</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-stories">قصص</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comments">تعليقات</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-messages">رسائل</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-likes">إعجابات</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-friends">الأصدقاء</button></li>
-    </ul>
-
-    <div class="tab-content border border-top-0 p-3 bg-white rounded-bottom" id="userTabsContent">
-        <div class="tab-pane fade show active" id="tab-videos">
-            <div class="row row-cols-1 row-cols-md-3 g-2">
-                <?php
-                $vids = mysqli_query($con, "SELECT * FROM videos WHERE user_id = $uid ORDER BY id DESC");
-                while($v = mysqli_fetch_assoc($vids)): ?>
-                    <div class="col">
-                        <div class="card h-100 shadow-sm">
-                            <video class="card-img-top" src="<?= $v['location'] ?>" style="height: 150px; background: #000;"></video>
-                            <div class="card-body p-2">
-                                <small class="d-block text-truncate fw-bold"><?= htmlspecialchars($v['title']) ?></small>
-                                <small class="text-muted"><?= $v['status'] ?></small>
+        <!-- Detail Sections -->
+        <div class="space-y-8">
+            <!-- Videos Section -->
+            <section>
+                <h5 class="text-lg font-bold mb-4 border-b border-white/5 pb-2">🎥 الفيديوهات</h5>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <?php
+                    $vids = mysqli_query($con, "SELECT * FROM videos WHERE user_id = $uid ORDER BY id DESC");
+                    while($v = mysqli_fetch_assoc($vids)): ?>
+                        <div class="bg-black/50 rounded-xl overflow-hidden border border-white/5 group">
+                            <video class="w-full h-32 object-cover" src="<?= $v['location'] ?>"></video>
+                            <div class="p-2">
+                                <p class="text-[10px] text-slate-300 truncate font-semibold"><?= htmlspecialchars($v['title']) ?></p>
+                                <p class="text-[8px] text-slate-500 mt-1"><?= $v['status'] ?></p>
                             </div>
                         </div>
-                    </div>
-                <?php endwhile; if(mysqli_num_rows($vids)==0) echo "<p class='text-muted text-center'>لا توجد فيديوهات</p>"; ?>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="tab-posts">
-            <?php
-            $psts = mysqli_query($con, "SELECT * FROM posts WHERE user_id = $uid ORDER BY created_at DESC");
-            while($p = mysqli_fetch_assoc($psts)): ?>
-                <div class="border-bottom mb-3 pb-2">
-                    <div class="d-flex align-items-start">
-                        <?php if(!empty($p['image_path'])): ?>
-                            <img src="<?= $p['image_path'] ?>" style="width: 80px; height: 80px; object-fit: cover; margin-left: 15px;" class="rounded border">
-                        <?php endif; ?>
-                        <div>
-                            <p class="mb-1 fw-bold"><?= htmlspecialchars($p['content']) ?></p>
-                            <small class="text-muted"><i class="far fa-clock"></i> <?= $p['created_at'] ?></small>
-                            <div class="mt-1">
-                                <?php 
-                                    $pid = $p['id'];
-                                    $l_cnt = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM post_likes WHERE post_id = $pid"))['c'];
-                                    $c_cnt = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as c FROM comments WHERE post_id = $pid"))['c'];
-                                ?>
-                                <span class="badge bg-light text-dark border"><i class="fas fa-heart text-danger"></i> <?= $l_cnt ?></span>
-                                <span class="badge bg-light text-dark border ms-1"><i class="fas fa-comment text-primary"></i> <?= $c_cnt ?></span>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endwhile; if(mysqli_num_rows($vids)==0) echo "<p class='text-slate-500 text-xs'>لا توجد فيديوهات</p>"; ?>
                 </div>
-            <?php endwhile; if(mysqli_num_rows($psts)==0) echo "<p class='text-muted text-center py-3'>لا توجد منشورات</p>"; ?>
-        </div>
-        <div class="tab-pane fade" id="tab-stories">
-            <div class="row row-cols-2 row-cols-md-4 g-2">
-                <?php
-                $strs = mysqli_query($con, "SELECT * FROM stories WHERE user_id = $uid ORDER BY created_at DESC");
-                while($s = mysqli_fetch_assoc($strs)): ?>
-                    <div class="col">
-                        <div class="card h-100 shadow-sm border-0">
-                            <?php if($s['file_type'] == 'image'): ?>
-                                <img src="<?= $s['file_path'] ?>" class="card-img-top rounded" style="height: 120px; object-fit: cover;">
-                            <?php else: ?>
-                                <video src="<?= $s['file_path'] ?>" class="card-img-top rounded" style="height: 120px; background: #000;"></video>
+            </section>
+
+            <!-- Posts Section -->
+            <section>
+                <h5 class="text-lg font-bold mb-4 border-b border-white/5 pb-2">📝 المنشورات</h5>
+                <div class="space-y-4">
+                    <?php
+                    $psts = mysqli_query($con, "SELECT * FROM posts WHERE user_id = $uid ORDER BY created_at DESC");
+                    while($p = mysqli_fetch_assoc($psts)): ?>
+                        <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex gap-4">
+                            <?php if(!empty($p['image_path'])): ?>
+                                <img src="<?= $p['image_path'] ?>" class="size-16 rounded-lg object-cover border border-white/10 shrink-0">
                             <?php endif; ?>
-                            <div class="card-body p-1 text-center font-small">
-                                <?php 
-                                    $sid = $s['id'];
-                                    $v_res = mysqli_query($con, "SELECT COUNT(*) as c FROM story_views WHERE story_id = $sid");
-                                    $v_count = mysqli_fetch_assoc($v_res)['c'];
-                                ?>
-                                <small class="text-muted d-block" style="font-size: 10px;"><?= date('m/d H:i', strtotime($s['created_at'])) ?></small>
-                                <span class="badge bg-info text-white view-story-btn" 
-                                      style="font-size: 10px; cursor: pointer;" 
-                                      data-sid="<?= $sid ?>" 
-                                      onclick="showStoryViewers(<?= $sid ?>, event)">
-                                    <?= $v_count ?> مشاهدة
-                                </span>
-                                <div id="viewers-list-<?= $sid ?>" class="d-none mt-1 p-1 border rounded bg-light text-start" style="font-size: 9px; max-height: 100px; overflow-y: auto;">
-                                    <?php
-                                    $vrs = mysqli_query($con, "SELECT u.username FROM story_views sv JOIN users u ON sv.user_id = u.id WHERE sv.story_id = $sid");
-                                    while($vr = mysqli_fetch_assoc($vrs)) echo "• ".htmlspecialchars($vr['username'])."<br>";
-                                    if(mysqli_num_rows($vrs)==0) echo "لا توجد مشاهدات";
-                                    ?>
-                                </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-slate-200"><?= htmlspecialchars($p['content']) ?></p>
+                                <p class="text-[10px] text-slate-500 mt-2"><?= $p['created_at'] ?></p>
                             </div>
                         </div>
-                    </div>
-                <?php endwhile; if(mysqli_num_rows($strs)==0) echo "<div class='col-12 text-center text-muted'>لا توجد قصص</div>"; ?>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="tab-comments">
-            <?php
-            $cmts = mysqli_query($con, "SELECT * FROM comments WHERE user_id = $uid ORDER BY created_at DESC");
-            while($c = mysqli_fetch_assoc($cmts)): ?>
-                <div class="border-bottom mb-2 pb-2">
-                    <p class="mb-1 italic"><?= htmlspecialchars($c['comment']) ?></p>
-                    <small class="text-muted">على: <?= $c['post_id'] ? "منشور #".$c['post_id'] : ($c['video_id'] ? "فيديو #".$c['video_id'] : "غير معروف") ?> | <?= $c['created_at'] ?></small>
+                    <?php endwhile; if(mysqli_num_rows($psts)==0) echo "<p class='text-slate-500 text-xs'>لا توجد منشورات</p>"; ?>
                 </div>
-            <?php endwhile; if(mysqli_num_rows($cmts)==0) echo "<p class='text-muted text-center'>لا توجد تعليقات</p>"; ?>
-        </div>
-        <div class="tab-pane fade" id="tab-messages">
-             <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead><tr><th>من/إلى</th><th>الرسالة</th><th>التاريخ</th></tr></thead>
-                    <tbody>
-                        <?php
-                        $msgs = mysqli_query($con, "SELECT m.*, u1.username as sender, u2.username as receiver 
-                                                  FROM messages m 
-                                                  JOIN users u1 ON m.sender_id = u1.id 
-                                                  JOIN users u2 ON m.receiver_id = u2.id 
-                                                  WHERE sender_id = $uid OR receiver_id = $uid 
-                                                  ORDER BY created_at DESC");
-                        while($m = mysqli_fetch_assoc($msgs)): 
-                            $msg_text = $m['message'];
-                            if(strpos($msg_text, '[[VIDEO_CALL]]') !== false) {
-                                $parts = explode('|', $msg_text);
-                                if(count($parts) >= 3) {
-                                    $msg_text = '<span class="text-primary"><i class="fas fa-video"></i> مكالمة فيديو</span>';
-                                }
-                            } elseif (strpos($msg_text, '[[IMAGE]]') !== false) {
-                                $path = str_replace('[[IMAGE]]', '', $msg_text);
-                                $msg_text = '<img src="'.$path.'" style="width:100px; height:60px; object-fit:cover;" class="rounded border" onclick="window.open(this.src)">';
-                            } elseif (strpos($msg_text, '[[VIDEO]]') !== false) {
-                                $path = str_replace('[[VIDEO]]', '', $msg_text);
-                                $msg_text = '<video src="'.$path.'" style="width:100px; height:60px; background:#000;" class="rounded border" controls></video>';
-                            } elseif (strpos($msg_text, '[[AUDIO]]') !== false) {
-                                $path = str_replace('[[AUDIO]]', '', $msg_text);
-                                $msg_text = '<audio src="'.$path.'" style="width:150px; height:30px;" controls></audio>';
-                            }
-                        ?>
-                            <tr class="<?= $m['sender_id'] == $uid ? 'table-light' : '' ?>">
-                                <td><small class="fw-bold"><?= $m['sender'] ?> ➔ <?= $m['receiver'] ?></small></td>
-                                <td><small><?= $msg_text ?></small></td>
-                                <td><small class="text-muted"><?= date('m/d H:i', strtotime($m['created_at'])) ?></small></td>
+            </section>
+
+            <!-- Stories Section -->
+            <section>
+                <h5 class="text-lg font-bold mb-4 border-b border-white/5 pb-2">📸 القصص</h5>
+                <div class="grid grid-cols-3 md:grid-cols-4 gap-3">
+                    <?php
+                    $strs = mysqli_query($con, "SELECT * FROM stories WHERE user_id = $uid ORDER BY created_at DESC");
+                    while($s = mysqli_fetch_assoc($strs)): ?>
+                        <div class="relative group aspect-[9/16] bg-black rounded-lg overflow-hidden border border-white/5">
+                            <?php if($s['file_type'] == 'image'): ?>
+                                <img src="<?= $s['file_path'] ?>" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all">
+                            <?php else: ?>
+                                <video src="<?= $s['file_path'] ?>" class="w-full h-full object-cover opacity-80"></video>
+                            <?php endif; ?>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
+                                <p class="text-[8px] text-slate-400 capitalize"><?= $s['file_type'] ?></p>
+                            </div>
+                        </div>
+                    <?php endwhile; if(mysqli_num_rows($strs)==0) echo "<div class='col-span-full py-4 text-center text-slate-500 text-xs'>لا توجد قصص</div>"; ?>
+                </div>
+            </section>
+
+            <!-- Messages Summary Table -->
+            <section>
+                <h5 class="text-lg font-bold mb-4 border-b border-white/5 pb-2">✉️ سجل الرسائل (آخر 20)</h5>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead>
+                            <tr class="text-slate-500 border-b border-white/5">
+                                <th class="pb-2">من/إلى</th>
+                                <th class="pb-2">الرسالة</th>
+                                <th class="pb-2">التاريخ</th>
                             </tr>
-                        <?php endwhile; if(mysqli_num_rows($msgs)==0) echo "<tr><td colspan='3' class='text-center'>لا توجد رسائل</td></tr>"; ?>
-                    </tbody>
-                </table>
-            </div>
-        <div class="tab-pane fade" id="tab-likes">
-            <h6>إعجابات المنشورات:</h6>
-            <?php
-            $lks = mysqli_query($con, "SELECT pl.*, p.content FROM post_likes pl JOIN posts p ON pl.post_id = p.id WHERE pl.user_id = $uid");
-            while($l = mysqli_fetch_assoc($lks)): ?>
-                 <small class='d-block border-bottom mb-1 pb-1'>أعجب بمنشور: "<?= mb_substr($l['content'],0,30) ?>..."</small>
-            <?php endwhile; if(mysqli_num_rows($lks)==0) echo "<small class='text-muted d-block'>لا توجد إعجابات منشورات</small>"; ?>
-
-            <h6 class="mt-3">إعجابات الفيديوهات:</h6>
-            <?php
-            $vlks = mysqli_query($con, "SELECT vl.*, v.title FROM video_likes vl JOIN videos v ON vl.video_id = v.id WHERE vl.user_id = $uid");
-            while($l = mysqli_fetch_assoc($vlks)): ?>
-                 <small class='d-block border-bottom mb-1 pb-1'>أعجب بفيديو: "<?= htmlspecialchars($l['title']) ?>"</small>
-            <?php endwhile; if(mysqli_num_rows($vlks)==0) echo "<small class='text-muted'>لا توجد إعجابات فيديوهات</small>"; ?>
-        </div>
-        <div class="tab-pane fade" id="tab-friends">
-
-            <h6>قائمة الأصدقاء الحالية:</h6>
-            <div class="list-group">
-                <?php
-                $q = "SELECT u.id, u.username, u.profile_picture FROM users u 
-                      JOIN friends f ON (u.id = f.sender_id OR u.id = f.receiver_id) 
-                      WHERE (f.sender_id = $uid OR f.receiver_id = $uid) 
-                      AND u.id != $uid AND f.status = 'accepted'";
-                $friends = mysqli_query($con, $q);
-                while($f = mysqli_fetch_assoc($friends)): ?>
-                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                         <div class="d-flex align-items-center">
-                             <img src="<?= !empty($f['profile_picture']) ? $f['profile_picture'] : 'uploads/profile.jpg' ?>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" class="me-2 rounded-circle border">
-                             <span class="ms-2 fw-bold"><?= htmlspecialchars($f['username']) ?></span>
-                         </div>
-                         <button class="btn btn-danger btn-sm" onclick="removeFriend(<?= $uid ?>, <?= $f['id'] ?>)"><i class="fas fa-user-minus"></i> إزالة</button>
-                     </div>
-                <?php endwhile; if(mysqli_num_rows($friends)==0) echo "<p class='text-muted text-center'>لا يوجد أصدقاء</p>"; ?>
-            </div>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <?php
+                            $msgs = mysqli_query($con, "SELECT m.*, u1.username as sender, u2.username as receiver 
+                                                      FROM messages m 
+                                                      JOIN users u1 ON m.sender_id = u1.id 
+                                                      JOIN users u2 ON m.receiver_id = u2.id 
+                                                      WHERE sender_id = $uid OR receiver_id = $uid 
+                                                      ORDER BY created_at DESC LIMIT 20");
+                            while($m = mysqli_fetch_assoc($msgs)): 
+                                $txt = $m['message'];
+                                if(strpos($txt, '[[IMAGE]]') !== false) $txt = "📷 صورة";
+                                elseif(strpos($txt, '[[VIDEO]]') !== false) $txt = "🎥 فيديو";
+                                elseif(strpos($txt, '[[AUDIO]]') !== false) $txt = "🎤 صوتية";
+                            ?>
+                                <tr>
+                                    <td class="py-2"><span class="<?= $m['sender_id'] == $uid ? 'text-blue-400' : 'text-slate-400' ?>"><?= $m['sender'] ?> ➔ <?= $m['receiver'] ?></span></td>
+                                    <td class="py-2 text-slate-300 max-w-[200px] truncate"><?= htmlspecialchars($txt) ?></td>
+                                    <td class="py-2 text-slate-500"><?= date('m/d H:i', strtotime($m['created_at'])) ?></td>
+                                </tr>
+                            <?php endwhile; if(mysqli_num_rows($msgs)==0) echo "<tr><td colspan='3' class='text-center py-4 text-slate-500'>لا توجد رسائل</td></tr>"; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </div>
     <?php
     exit();
 }
 
-// Fetch Data
 $fetchReportedVideos = mysqli_query($con, "SELECT * FROM videos WHERE status = 'signale'");
 $fetchUsers = mysqli_query($con, "SELECT * FROM users ORDER BY id DESC");
 ?>
-
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html class="dark" lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة المسؤول - Admin Panel</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Modern Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "secondary": "#a855f7",
+                        "background-dark": "#0b0e14",
+                        "surface-dark": "#161b26",
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-sidebar { background: rgba(22, 27, 38, 0.7); backdrop-filter: blur(12px); border-left: 1px solid rgba(255, 255, 255, 0.05); }
+        .stat-card-gradient { background: linear-gradient(135deg, rgba(22, 27, 38, 1) 0%, rgba(30, 36, 50, 1) 100%); }
+        .neon-glow { box-shadow: 0 0 15px rgba(19, 91, 236, 0.3); }
+    </style>
 </head>
-<body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">Admin Panel</span>
-            <div class="d-flex align-items-center">
-                 <span class="text-white me-3 ms-3">Welcome Admin</span>
-                 <a href="?logout=true" class="btn btn-danger btn-sm">تسجيل خروج</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container py-4">
-        
-        <!-- Reported Videos Section -->
-        <div class="card mb-5 shadow-sm">
-            <div class="card-header bg-warning text-dark">
-                <h4 class="mb-0"><i class="fas fa-flag"></i> الفيديوهات المبلغ عنها</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>الفيديو</th>
-                                <th>العنوان</th>
-                                <th>الموضوع</th>
-                                <th>تاريخ الإبلاغ</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if(mysqli_num_rows($fetchReportedVideos) > 0): ?>
-                                <?php while ($row = mysqli_fetch_assoc($fetchReportedVideos)): ?>
-                                    <tr>
-                                        <td>
-                                            <video width="120" height="80" controls class="rounded border">
-                                                <source src="<?= $row['location']; ?>" type="video/mp4">
-                                            </video>
-                                        </td>
-                                        <td><?= $row['title']; ?></td>
-                                        <td><?= $row['subject']; ?></td>
-                                        <td><?= $row['reported_at']; ?></td>
-                                        <td>
-                                            <form action="" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الفيديو؟');">
-                                                <input type="hidden" name="delete_video_id" value="<?= $row['id']; ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> حذف</button>
-                                            </form>
-                                            <form action="" method="POST" style="display:inline;">
-                                                <input type="hidden" name="restore_video_id" value="<?= $row['id']; ?>">
-                                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> استعادة</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="5" class="text-center text-muted">لا توجد فيديوهات مبلغ عنها</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+<body class="bg-background-dark font-display text-slate-100 min-h-screen">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="glass-sidebar w-64 hidden lg:flex flex-col fixed inset-y-0 right-0 z-50">
+            <div class="p-6 flex items-center gap-3">
+                <div class="size-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white neon-glow">
+                    <span class="material-symbols-outlined font-bold">rocket_launch</span>
+                </div>
+                <div>
+                    <h1 class="text-white text-lg font-bold">Aroussi Admin</h1>
+                    <p class="text-slate-500 text-xs">لوحة التحكم</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Users Management Section -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-users"></i> إدارة المستخدمين</h4>
+            <nav class="flex-1 px-4 space-y-2 mt-4">
+                <a href="#overview" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <p class="text-sm font-semibold">نظرة عامة</p>
+                </a>
+                <a href="#users" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                    <span class="material-symbols-outlined">group</span>
+                    <p class="text-sm font-medium">المستخدمين</p>
+                </a>
+                <a href="#reported" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                    <span class="material-symbols-outlined">flag</span>
+                    <p class="text-sm font-medium">البلاغات</p>
+                </a>
+                <a href="indexmo.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                    <span class="material-symbols-outlined">home</span>
+                    <p class="text-sm font-medium">العودة للموقع</p>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/5">
+                <a href="?logout=true" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-all">
+                    <span class="material-symbols-outlined">logout</span>
+                    <p class="text-sm font-medium">تسجيل الخروج</p>
+                </a>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>الصورة</th>
-                                <th>اسم المستخدم</th>
-                                <th>البريد الإلكتروني</th>
-                                <th>الأصدقاء</th>
-                                <th>كلمة المرور</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($user = mysqli_fetch_assoc($fetchUsers)): ?>
-                                <tr>
-                                    <td><?= $user['id']; ?></td>
-                                    <td>
-                                        <img src="<?= !empty($user['profile_picture']) ? $user['profile_picture'] : 'uploads/profile.jpg' ?>" 
-                                             alt="Profile" 
-                                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;"
-                                             onerror="this.src='uploads/profile.jpg'">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:mr-64 flex flex-col min-h-screen">
+            <!-- Header -->
+            <header class="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-background-dark/50 backdrop-blur-md sticky top-0 z-40">
+                <div class="relative w-full max-w-md">
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+                    <input class="w-full bg-surface-dark/50 border border-white/5 rounded-xl pr-10 pl-4 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-primary outline-none" placeholder="بحث..." type="text"/>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-left hidden sm:block">
+                        <p class="text-sm font-bold text-white leading-none">مدير النظام</p>
+                        <p class="text-[10px] text-primary font-bold tracking-wider uppercase mt-1">Super Admin</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8 space-y-8">
+                <!-- Stats -->
+                <div id="overview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="stat-card-gradient p-6 rounded-2xl border border-white/5 flex flex-col gap-4 group hover:border-primary/30 transition-all">
+                        <div class="flex items-center justify-between">
+                            <div class="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500"><span class="material-symbols-outlined">group</span></div>
+                            <div class="text-xs font-bold text-blue-500">مستخدم</div>
+                        </div>
+                        <div><p class="text-slate-400 text-sm">إجمالي المستخدمين</p><h3 class="text-2xl font-bold mt-1"><?= $total_users ?></h3></div>
+                    </div>
+                    <div class="stat-card-gradient p-6 rounded-2xl border border-white/5 flex flex-col gap-4 group hover:border-red-500/30 transition-all">
+                        <div class="flex items-center justify-between">
+                            <div class="size-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500"><span class="material-symbols-outlined">report</span></div>
+                            <div class="text-xs font-bold text-red-500">نشط</div>
+                        </div>
+                        <div><p class="text-slate-400 text-sm">فيديوهات مبلغ عنها</p><h3 class="text-2xl font-bold mt-1"><?= $reported_count ?></h3></div>
+                    </div>
+                    <div class="stat-card-gradient p-6 rounded-2xl border border-white/5 flex flex-col gap-4 group hover:border-purple-500/30 transition-all">
+                        <div class="flex items-center justify-between">
+                            <div class="size-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500"><span class="material-symbols-outlined">movie</span></div>
+                        </div>
+                        <div><p class="text-slate-400 text-sm">إجمالي الفيديوهات</p><h3 class="text-2xl font-bold mt-1"><?= $total_videos ?></h3></div>
+                    </div>
+                    <div class="stat-card-gradient p-6 rounded-2xl border border-white/5 flex flex-col gap-4 group hover:border-cyan-500/30 transition-all">
+                        <div class="flex items-center justify-between">
+                            <div class="size-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500"><span class="material-symbols-outlined">camera</span></div>
+                        </div>
+                        <div><p class="text-slate-400 text-sm">إجمالي القصص</p><h3 class="text-2xl font-bold mt-1"><?= $total_stories ?></h3></div>
+                    </div>
+                </div>
+
+                <!-- Reported Videos -->
+                <div id="reported" class="bg-surface-dark border border-white/5 rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-warning">flag</span> الفيديوهات المبلغ عنها</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right">
+                            <thead>
+                                <tr class="text-slate-500 text-xs font-bold uppercase border-b border-white/5">
+                                    <th class="pb-4">الفيديو</th>
+                                    <th class="pb-4">العنوان</th>
+                                    <th class="pb-4">التاريخ</th>
+                                    <th class="pb-4 text-left">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <?php while ($row = mysqli_fetch_assoc($fetchReportedVideos)): ?>
+                                <tr class="group hover:bg-white/5 transition-all">
+                                    <td class="py-4">
+                                        <video class="h-16 w-24 rounded-lg bg-black object-cover border border-white/10" src="<?= $row['location']; ?>"></video>
                                     </td>
-                                    <td><?= htmlspecialchars($user['username']); ?></td>
-                                    <td><?= isset($user['email']) ? htmlspecialchars($user['email']) : 'N/A'; ?></td>
-                                    <td>
-                                        <?php 
-                                            // Get friend count
-                                            $uid_loop = $user['id'];
-                                            $f_count_q = mysqli_query($con, "SELECT COUNT(*) as c FROM friends WHERE (sender_id = $uid_loop OR receiver_id = $uid_loop) AND status = 'accepted'");
-                                            $f_count = mysqli_fetch_assoc($f_count_q)['c'];
-                                        ?>
-                                        <a href="#" onclick="viewUserDetails(<?= $user['id']; ?>, '<?= htmlspecialchars($user['username']); ?>', 'tab-friends')" class="text-decoration-none fw-bold">
-                                            <?= $f_count ?> <i class="fas fa-user-friends"></i>
-                                        </a>
-                                    </td>
-                                    <td class="text-muted" style="font-family: monospace;"><?= htmlspecialchars($user['password']); ?></td>
-                                    <td>
-                                        <!-- View Details Button -->
-                                        <button class="btn btn-info btn-sm text-white" onclick="viewUserDetails(<?= $user['id']; ?>, '<?= htmlspecialchars($user['username']); ?>')">
-                                            <i class="fas fa-eye"></i> تفاصيل
-                                        </button>
-
-
-
-                                        <!-- Edit Button -->
-                                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editUserModal<?= $user['id']; ?>">
-                                            <i class="fas fa-edit"></i> تعديل
-                                        </button>
-                                        
-                                        <!-- Delete Button -->
-                                        <form action="" method="POST" style="display:inline;" onsubmit="return confirm('⚠️ تحذير: سيتم حذف المستخدم وجميع بياناته (فيديوهات، قصص، إلخ). هل أنت متأكد؟');">
-                                            <input type="hidden" name="delete_user_id" value="<?= $user['id']; ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> حذف</button>
-                                        </form>
-
-                                        <!-- Edit Modal -->
-                                        <div class="modal fade" id="editUserModal<?= $user['id']; ?>" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">تعديل المستخدم: <?= htmlspecialchars($user['username']); ?></h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <form method="POST">
-                                                        <div class="modal-body">
-                                                            <input type="hidden" name="edit_user_id" value="<?= $user['id']; ?>">
-                                                            <div class="mb-3">
-                                                                 <label class="form-label">اسم المستخدم</label>
-                                                                 <input type="text" name="username" class="form-control" value="<?= htmlspecialchars($user['username']); ?>" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                 <label class="form-label">البريد الإلكتروني</label>
-                                                                 <input type="email" name="email" class="form-control" value="<?= isset($user['email']) ? htmlspecialchars($user['email']) : ''; ?>">
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                 <label class="form-label">كلمة المرور</label>
-                                                                 <input type="text" name="password" class="form-control" value="<?= htmlspecialchars($user['password']); ?>" required>
-                                                                 <small class="text-muted">يمكنك تغيير كلمة المرور هنا</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                            <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
+                                    <td class="py-4"><p class="text-sm font-bold"><?= $row['title']; ?></p></td>
+                                    <td class="py-4 text-xs text-slate-500"><?= $row['reported_at']; ?></td>
+                                    <td class="py-4 text-left">
+                                        <div class="flex gap-2">
+                                            <form method="POST" onsubmit="return confirm('حذف نهائي؟')">
+                                                <input type="hidden" name="delete_video_id" value="<?= $row['id']; ?>">
+                                                <button class="bg-red-500/10 text-red-500 px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all">حذف</button>
+                                            </form>
+                                            <form method="POST">
+                                                <input type="hidden" name="restore_video_id" value="<?= $row['id']; ?>">
+                                                <button class="bg-green-500/10 text-green-500 px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition-all">استعادة</button>
+                                            </form>
                                         </div>
-
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- User Details Modal -->
-        <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title" id="userDetailsTitle">تفاصيل المستخدم</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="userDetailsBody" dir="rtl">
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
+                <!-- Users Table -->
+                <div id="users" class="bg-surface-dark border border-white/5 rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-primary">group</span> إدارة المستخدمين</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right font-inter">
+                            <thead>
+                                <tr class="text-slate-500 text-xs font-bold uppercase border-b border-white/5">
+                                    <th class="pb-4">المستخدم</th>
+                                    <th class="pb-4">البريد</th>
+                                    <th class="pb-4">كلمة المرور</th>
+                                    <th class="pb-4 text-left">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <?php while ($user = mysqli_fetch_assoc($fetchUsers)): ?>
+                                <tr class="group hover:bg-white/5 transition-all">
+                                    <td class="py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img class="size-10 rounded-full border border-white/10 object-cover" src="<?= !empty($user['profile_picture']) ? $user['profile_picture'] : 'uploads/profile.jpg' ?>" onerror="this.src='uploads/profile.jpg'">
+                                            <div>
+                                                <p class="text-sm font-bold"><?= htmlspecialchars($user['username']); ?></p>
+                                                <p class="text-[10px] text-slate-500">ID: <?= $user['id']; ?></p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 text-sm text-slate-400"><?= $user['email'] ? $user['email'] : 'N/A' ?></td>
+                                    <td class="py-4 font-mono text-xs text-slate-500"><?= htmlspecialchars($user['password']); ?></td>
+                                    <td class="py-4 text-left">
+                                        <div class="flex gap-2">
+                                            <button onclick="viewUserDetails(<?= $user['id']; ?>, '<?= $user['username'] ?>')" class="p-2 hover:text-blue-500 transition-all"><span class="material-symbols-outlined text-lg">visibility</span></button>
+                                            <button onclick="openEditModal(<?= $user['id']; ?>, '<?= $user['username'] ?>', '<?= $user['email'] ?>', '<?= $user['password'] ?>')" class="p-2 hover:text-green-500 transition-all"><span class="material-symbols-outlined text-lg">edit</span></button>
+                                            <form method="POST" class="inline" onsubmit="return confirm('حذف المستخدم نهائياً؟')">
+                                                <input type="hidden" name="delete_user_id" value="<?= $user['id']; ?>">
+                                                <button class="p-2 hover:text-red-500 transition-all"><span class="material-symbols-outlined text-lg">delete</span></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-[#161b26] w-full max-w-4xl rounded-2xl border border-white/5 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center sticky top-0 bg-[#161b26]">
+                <h4 id="detTitle" class="text-xl font-bold">تفاصيل المستخدم</h4>
+                <button onclick="closeDetails()" class="text-slate-400 hover:text-white"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div id="detBody" class="p-8"></div>
+        </div>
+    </div>
+
+    <!-- Edit Modal (Simple Version) -->
+    <div id="editModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-[#161b26] w-full max-w-md rounded-2xl border border-white/5 p-8">
+            <h4 class="text-xl font-bold mb-6">تعديل المستخدم</h4>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" id="editUserId" name="edit_user_id">
+                <div><label class="text-xs text-slate-400 mb-1 block">الاسم</label><input type="text" id="editName" name="username" class="w-full bg-slate-900 border border-white/5 rounded-xl p-3"></div>
+                <div><label class="text-xs text-slate-400 mb-1 block">البريد</label><input type="email" id="editEmail" name="email" class="w-full bg-slate-900 border border-white/5 rounded-xl p-3"></div>
+                <div><label class="text-xs text-slate-400 mb-1 block">كلمة المرور</label><input type="text" id="editPass" name="password" class="w-full bg-slate-900 border border-white/5 rounded-xl p-3"></div>
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="flex-1 bg-primary py-3 rounded-xl font-bold">حفظ</button>
+                    <button type="button" onclick="closeEdit()" class="flex-1 bg-white/5 py-3 rounded-xl">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        function viewUserDetails(userId, username, targetTabId = null) {
-            document.getElementById('userDetailsTitle').innerText = 'تفاصيل المستخدم: ' + username;
-            document.getElementById('userDetailsBody').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-            
-            var userModalEl = document.getElementById('userDetailsModal');
-            var myModal = new bootstrap.Modal(userModalEl);
-            myModal.show();
-
-            fetch('admin-cpanl.php?fetch_details=1&user_id=' + userId)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('userDetailsBody').innerHTML = html;
-                    if (targetTabId) {
-                        setTimeout(() => {
-                            var tabBtn = document.querySelector('#userTabs button[data-bs-target="#' + targetTabId + '"]');
-                            if(tabBtn) {
-                                var tab = new bootstrap.Tab(tabBtn);
-                                tab.show();
-                            }
-                        }, 50);
-                    }
-                })
-                .catch(err => {
-                    document.getElementById('userDetailsBody').innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء تحميل البيانات</div>';
-                });
+        function viewUserDetails(uid, name) {
+            document.getElementById('detTitle').innerText = 'نشاط المستخدم: ' + name;
+            document.getElementById('detBody').innerHTML = '<div class="flex justify-center p-20"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>';
+            document.getElementById('detailsModal').style.display = 'flex';
+            fetch('admin-cpanl.php?fetch_details=1&user_id=' + uid)
+                .then(r => r.text())
+                .then(h => { document.getElementById('detBody').innerHTML = h; });
         }
-
-        function showStoryViewers(sid, event) {
-            event.stopPropagation();
-            let list = document.getElementById('viewers-list-' + sid);
-            if (list.classList.contains('d-none')) {
-                list.classList.remove('d-none');
-            } else {
-                list.classList.add('d-none');
-            }
+        function closeDetails() { document.getElementById('detailsModal').style.display = 'none'; }
+        function openEditModal(uid, name, email, pass) {
+            document.getElementById('editUserId').value = uid;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPass').value = pass;
+            document.getElementById('editModal').style.display = 'flex';
         }
-
-        // Friend Actions
-        function addFriend(userId) {
-            let username = document.getElementById('new-friend-username').value;
-            if(!username) return alert("اختر مستخدم لإضافته");
-
-            let formData = new FormData();
-            formData.append('ajax_friend_action', 1);
-            formData.append('action', 'add');
-            formData.append('user_id', userId);
-            formData.append('friend_username', username);
-
-            fetch('admin-cpanl.php', { method: 'POST', body: formData })
-            .then(r => r.json())
-            .then(data => {
-                if(data.success) {
-                    // Reload details and keep on friends tab
-                    viewUserDetails(userId, document.getElementById('userDetailsTitle').innerText.replace(' تفاصيل المستخدم: ', ''), 'tab-friends'); 
-                } else {
-                    alert(data.error);
-                }
-            });
-        }
-
-        function removeFriend(userId, friendId) {
-            if(!confirm("هل أنت متأكد من إزالة هذا الصديق؟")) return;
-            
-            let formData = new FormData();
-            formData.append('ajax_friend_action', 1);
-            formData.append('action', 'remove');
-            formData.append('user_id', userId);
-            formData.append('friend_id', friendId);
-
-            fetch('admin-cpanl.php', { method: 'POST', body: formData })
-            .then(r => r.json())
-            .then(data => {
-                if(data.success) {
-                   // Reload details and keep on friends tab
-                   let title = document.getElementById('userDetailsTitle').innerText;
-                   let username = title.split(': ')[1] || '';
-                   viewUserDetails(userId, username, 'tab-friends');
-                } else {
-                    alert('Error');
-                }
-            });
-        }
-
-    </script>
-</body>
-</html>
+        function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
     </script>
 </body>
 </html>
