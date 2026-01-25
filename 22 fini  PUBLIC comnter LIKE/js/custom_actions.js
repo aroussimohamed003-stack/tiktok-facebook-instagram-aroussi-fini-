@@ -647,10 +647,10 @@ function loadStoryViewers(storyId) {
 // Comments Logic for Story
 function toggleStoryComments() {
     const modal = $('#storyCommentsModal');
-    if (modal.is(':visible')) {
-        modal.hide();
+    if (modal.hasClass('active')) {
+        modal.removeClass('active');
     } else {
-        modal.show();
+        modal.addClass('active');
         loadStoryComments(currentStoryId);
     }
 }

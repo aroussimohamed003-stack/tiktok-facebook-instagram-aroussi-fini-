@@ -590,7 +590,8 @@ if ($my_id > 0) {
 // Also ensure status is active
 $friend_condition = "AND videos.status = 'active' AND (videos.is_sponsor = 1 OR videos.user_id IN ($friend_ids_list))";
 
-$fetchAllVideos = mysqli_query($con, "SELECT videos.*, videos.user_id AS v_user_id, users.username, users.profile_picture
+$fetchAllVideos = mysqli_query($con, "SELECT videos.*, videos.user_id AS v_user_id, users.username, users.profile_picture,
+                                     (SELECT COUNT(*) FROM comments WHERE video_id = videos.id) AS comments_count
                                    FROM videos
                                    JOIN users ON videos.user_id = users.id
                                    WHERE 1=1
@@ -748,13 +749,53 @@ $inlineStyles = '
     font-size: 24px;
     text-align: center;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s, filter 0.2s;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.action-btn:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 5px rgba(254, 44, 85, 0.8));
 }
 .action-btn i {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
+    font-size: 26px;
 }
 .action-btn span {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+}
+.action-btn.liked i {
+    color: #FE2C55;
+    animation: heartBeat 0.3s ease-in-out;
+}
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+.comment-btn {
+    position: relative;
+}
+.comment-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #FE2C55;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    font-weight: bold;
+    border: 2px solid #000;
+}
+.action-btn i {
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
 }
 .upload-btn {
     position: fixed;
@@ -1140,6 +1181,9 @@ $inlineStyles = '
     padding: 0;
     color: white;
     flex-direction: column;
+}
+.story-comments-modal.active {
+    display: flex !important;
 }
 .story-comments-header {
     padding: 15px;
@@ -1567,7 +1611,7 @@ include("includes/navbar.php");
     </div>
 
     <!-- Video Comments Modal (Copied/Adapted from Story Comments) -->
-    <div class="story-comments-modal" id="videoCommentsModal" style="z-index: 6000;">
+    <div class="story-comments-modal" id="videoCommentsModal" style="z-index: 20006; position: fixed;">
         <div class="story-comments-header">
             التعليقات
             <span onclick="toggleVideoComments()" style="position:absolute; right:15px; top:15px; cursor:pointer;">&times;</span>
@@ -1651,18 +1695,18 @@ $viewers_query = mysqli_query($con, "SELECT users.username, users.profile_pictur
                                     }
                                     $likes_count = $row['likes'] ?? 0;
                                     ?>
-                                    <div class="action-btn" style="cursor: default; display: flex; flex-direction: column; align-items: center;">
-                                        <i class="fas fa-heart like-trigger <?= $liked ? 'liked' : '' ?>" data-video-id="<?= $video_id ?>" style="cursor: pointer; font-size: 24px;"></i>
-                                        <span class="likes-count-trigger" data-video-id="<?= $video_id ?>" id="likes-<?= $video_id ?>" style="cursor: pointer; font-size: 12px; margin-top: 5px;"><?= $likes_count ?></span>
-                                    </div>
+                                     <button class="action-btn <?= $liked ? 'liked' : '' ?>" data-video-id="<?= $video_id ?>">
+                                         <i class="fas fa-heart like-trigger <?= $liked ? 'liked' : '' ?>" data-video-id="<?= $video_id ?>"></i>
+                                         <span class="likes-count-trigger" data-video-id="<?= $video_id ?>" id="likes-<?= $video_id ?>"><?= $likes_count ?></span>
+                                     </button>
                                     <a href="<?= $isYouTube ? 'javascript:void(0)' : $location ?>" <?= $isYouTube ? 'onclick="alert(\'يوتيوب لا يسمح بالتحميل المباشر\')"' : 'download' ?> class="action-btn">
                                         <i class="fas fa-download"></i>
                                         <span>تحميل</span>
                                     </a>
-                                    <button class="action-btn" onclick="openVideoComments(<?= $video_id ?>)">
-                                        <i class="fas fa-comment"></i>
-                                        <span>تعليق</span>
-                                    </button>
+                                     <button class="action-btn comment-btn" onclick="openVideoComments(<?= $video_id ?>)">
+                                         <i class="fas fa-comment"></i>
+                                         <span id="comments-count-<?= $video_id ?>" class="comment-count-badge"><?= $row['comments_count'] ?? 0 ?></span>
+                                     </button>
                                     <button class="action-btn" onclick="openShareModal(<?= $video_id ?>, 'video')">
                                         <i class="fas fa-share"></i>
                                         <span>مشاركة</span>
