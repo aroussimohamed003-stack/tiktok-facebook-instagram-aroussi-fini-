@@ -1,0 +1,151 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+background-color: black;
+  color: white;
+  display: grid;
+  place-items: center;
+  font-family: Arial, sans-serif;
+}
+
+.app-video {
+  position: relative;
+  height: 80vh;
+  background-color: black;
+  overflow-y: scroll;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 20px;
+  margin-top: 20px;
+  scroll-snap-type: y mandatory;
+}
+
+.app-video::-webkit-scrollbar {
+  display: none;
+}
+
+.video {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background-color: black;
+  scroll-snap-align: start;
+  margin-bottom: 20px;
+}
+
+.video-player {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+}
+
+.footer {
+  display: flex;
+  position: relative;
+  bottom: 130px;
+  margin-left: 20px;
+}
+
+.footer-text {
+  flex: 1;
+}
+
+.footer-text h3 {
+  padding-bottom: 10px;
+  font-size: 16px;
+}
+
+.footer-text .description {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.img-marq {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.img-marq img {
+  width: 40px;
+  margin-right: 10px;
+}
+
+.img-marq marquee {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+}
+
+.delete-btn {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background-color: darkred;
+}
+
+/* Media Queries للتجاوب مع الشاشات المختلفة */
+@media (max-width: 768px) {
+  .app-video {
+    max-width: 100%;
+    height: 90vh;
+  }
+
+  .footer-text h3 {
+    font-size: 14px;
+  }
+
+  .footer-text .description {
+    font-size: 12px;
+    margin-top: -103px;
+  }
+
+  .img-marq marquee {
+    font-size: 12px;
+  }
+
+  .delete-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-video {
+    height: 85vh;
+  }
+
+  .footer-text h3 {
+    font-size: 12px;
+  }
+
+  .footer-text .description {
+    font-size: 10px;
+    
+  }
+
+  .img-marq marquee {
+    font-size: 10px;
+  }
+
+  .delete-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+}

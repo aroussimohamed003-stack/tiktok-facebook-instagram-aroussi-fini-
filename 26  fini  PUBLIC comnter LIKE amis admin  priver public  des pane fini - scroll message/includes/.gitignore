@@ -1,0 +1,65 @@
+# Temporary upload files
+temp_uploads/
+*.tmp
+
+# User uploaded content
+uploads/posts/
+uploads/profiles/
+uploads/profile_pictures/
+videos/*.mp4
+videos/*.mov
+videos/*.avi
+videos/*.mkv
+stories/
+stories_images/
+
+# Large binary files
+*.apk
+*.exe
+*.dmg
+*.pkg
+
+# Video files in root and vid directory
+/*.mp4
+/*.mov
+/*.avi
+/*.mkv
+vid/*.mp4
+vid/*.mov
+vid/*.avi
+vid/*.mkv
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+error_log
+access_log
+
+# Cache files
+cache/
+tmp/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# PHP specific
+vendor/
+composer.lock
